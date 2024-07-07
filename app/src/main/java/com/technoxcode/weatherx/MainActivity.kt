@@ -33,49 +33,36 @@ import retrofit.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-// OpenWeather Link : https://openweathermap.org/api
-/**
- * The useful link or some more explanation for this app you can checkout this link :
- * https://medium.com/@sasude9/basic-android-weather-app-6a7c0855caf4
- */
+
 class MainActivity : AppCompatActivity() {
 
-    // A fused location client variable which is further user to get the user's current location
+   
     private lateinit var mFusedLocationClient: FusedLocationProviderClient
 
-    // A global variable for Progress Dialog
+
     private var mProgressDialog: Dialog? = null
 
-    // A global variable for Current Latitude
+
     private var mLatitude: Double = 0.0
-    // A global variable for Current Longitude
+
     private var mLongitude: Double = 0.0
 
-    // TODO (STEP 1: Add a variable for SharedPreferences)
-    // START
-    // A global variable for the SharedPreferences
+   
     private lateinit var mSharedPreferences: SharedPreferences
-    // END
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Initialize the Fused location variable
+     
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // TODO (STEP 2: Initialize the SharedPreferences variable.)
-        // START
-        // Initialize the SharedPreferences variable
+    
         mSharedPreferences = getSharedPreferences(Constants.PREFERENCE_NAME, Context.MODE_PRIVATE)
-        // END
-
-        // TODO (STEP 7: Call the UI method to populate the data in
-        //  the UI which are already stored in sharedPreferences earlier.
-        //  At first run it will be blank.)
-        // START
+      
         setupUI()
-        // END
+      
 
         if (!isLocationEnabled()) {
             Toast.makeText(
@@ -213,39 +200,27 @@ class MainActivity : AppCompatActivity() {
 
         if (Constants.isNetworkAvailable(this@MainActivity)) {
 
-            /**
-             * Add the built-in converter factory first. This prevents overriding its
-             * behavior but also ensures correct behavior when using converters that consume all types.
-             */
+         
             val retrofit: Retrofit = Retrofit.Builder()
-                // API base URL.
+               
                 .baseUrl(Constants.BASE_URl)
-                /** Add converter factory for serialization and deserialization of objects. */
-                /**
-                 * Create an instance using a default {@link Gson} instance for conversion. Encoding to JSON and
-                 * decoding from JSON (when no charset is specified by a header) will use UTF-8.
-                 */
+              
                 .addConverterFactory(GsonConverterFactory.create())
-                /** Create the Retrofit instances. */
+               
                 .build()
 
-            /**
-             * Here we map the service interface in which we declares the end point and the API type
-             *i.e GET, POST and so on along with the request parameter which are required.
-             */
+         
             val service: WeatherService =
                 retrofit.create<WeatherService>(WeatherService::class.java)
 
-            /** An invocation of a Retrofit method that sends a request to a web-server and returns a response.
-             * Here we pass the required param in the service
-             */
+            
             val listCall: Call<WeatherResponse> = service.getWeather(
                 mLatitude, mLongitude, Constants.METRIC_UNIT, Constants.APP_ID
             )
 
             showCustomProgressDialog() // Used to show the progress dialog
 
-            // Callback methods are executed using the Retrofit callback executor.
+          
             listCall.enqueue(object : Callback<WeatherResponse> {
                 @SuppressLint("SetTextI18n")
                 override fun onResponse(
@@ -256,29 +231,23 @@ class MainActivity : AppCompatActivity() {
                     // Check weather the response is success or not.
                     if (response.isSuccess) {
 
-                        hideProgressDialog() // Hides the progress dialog
+                        hideProgressDialog() 
 
-                        /** The de-serialized response body of a successful response. */
+                       
                         val weatherList: WeatherResponse = response.body()
                         Log.i("Response Result", "$weatherList")
 
-                        // TODO (STEP 4: Here we convert the response object to string and store the string in the SharedPreference.)
-                        // START
-                        // Here we have converted the model class in to Json String to store it in the SharedPreferences.
+                    
                         val weatherResponseJsonString = Gson().toJson(weatherList)
-                        // Save the converted string to shared preferences
+                       
                         val editor = mSharedPreferences.edit()
                         editor.putString(Constants.WEATHER_RESPONSE_DATA, weatherResponseJsonString)
                         editor.apply()
-                        // END
-
-                        // TODO (STEP 5: Remove the weather detail object as we will be getting
-                        //  the object in form of a string in the setup UI method.)
-                        // START
+                      
                         setupUI()
-                        // END
+                        
                     } else {
-                        // If the response is not success then we check the response code.
+                       
                         val sc = response.code()
                         when (sc) {
                             400 -> {
@@ -295,7 +264,7 @@ class MainActivity : AppCompatActivity() {
                 }
 
                 override fun onFailure(t: Throwable) {
-                    hideProgressDialog() // Hides the progress dialog
+                    hideProgressDialog()
                     Log.e("Errorrrrr", t.message.toString())
                 }
             })
@@ -308,38 +277,27 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    /**
-     * Method is used to show the Custom Progress Dialog.
-     */
+    
     private fun showCustomProgressDialog() {
         mProgressDialog = Dialog(this)
 
-        /*Set the screen content from a layout resource.
-        The resource will be inflated, adding all top-level views to the screen.*/
+        
         mProgressDialog!!.setContentView(R.layout.dialog_custom_progress)
 
-        //Start the dialog and display it on screen.
+       
         mProgressDialog!!.show()
     }
 
-    /**
-     * This function is used to dismiss the progress dialog if it is visible to user.
-     */
+   
     private fun hideProgressDialog() {
         if (mProgressDialog != null) {
             mProgressDialog!!.dismiss()
         }
     }
 
-    /**
-     * Function is used to set the result in the UI elements.
-     */
+  
     private fun setupUI() {
-        // TODO (STEP 6: Here we get the stored response from
-        //  SharedPreferences and again convert back to data object
-        //  to populate the data in the UI.)
-        // START
-        // Here we have got the latest stored response from the SharedPreference and converted back to the data model object.
+      
         val weatherResponseJsonString =
             mSharedPreferences.getString(Constants.WEATHER_RESPONSE_DATA, "")
 
@@ -348,7 +306,7 @@ class MainActivity : AppCompatActivity() {
             val weatherList =
                 Gson().fromJson(weatherResponseJsonString, WeatherResponse::class.java)
 
-            // For loop to get the required data. And all are populated in the UI.
+          
             for (z in weatherList.weather.indices) {
                 Log.i("NAMEEEEEEEE", weatherList.weather[z].main)
 
@@ -365,7 +323,7 @@ class MainActivity : AppCompatActivity() {
                 tv_sunrise_time.text = unixTime(weatherList.sys.sunrise)
                 tv_sunset_time.text = unixTime(weatherList.sys.sunset)
 
-                // Here we update the main icon
+            
                 when (weatherList.weather[z].icon) {
                     "01d" -> iv_main.setImageResource(R.drawable.sunny)
                     "02d" -> iv_main.setImageResource(R.drawable.cloud)
@@ -384,12 +342,7 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         }
-        // END
-    }
-
-    /**
-     * Function is used to get the temperature unit value.
-     */
+     
     private fun getUnit(value: String): String? {
         Log.i("unitttttt", value)
         var value = "°C"
@@ -399,9 +352,7 @@ class MainActivity : AppCompatActivity() {
         return value
     }
 
-    /**
-     * The function is used to get the formatted time based on the Format and the LOCALE we pass to it.
-     */
+    
     private fun unixTime(timex: Long): String? {
         val date = Date(timex * 1000L)
         @SuppressLint("SimpleDateFormat") val sdf =
